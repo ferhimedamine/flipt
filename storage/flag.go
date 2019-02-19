@@ -8,7 +8,7 @@ import (
 	uuid "github.com/satori/go.uuid"
 
 	proto "github.com/golang/protobuf/ptypes"
-	"github.com/markphelps/flipt"
+	flipt "github.com/markphelps/flipt/proto"
 	sqlite3 "github.com/mattn/go-sqlite3"
 	"github.com/sirupsen/logrus"
 )
@@ -55,7 +55,7 @@ func (s *FlagService) flag(ctx context.Context, key string) (*flipt.Flag, error)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, flipt.ErrNotFoundf("flag %q", key)
+			return nil, ErrNotFoundf("flag %q", key)
 		}
 		return nil, err
 	}
@@ -152,7 +152,7 @@ func (s *FlagService) CreateFlag(ctx context.Context, r *flipt.CreateFlagRequest
 	if _, err := query.ExecContext(ctx); err != nil {
 		if sqliteErr, ok := err.(sqlite3.Error); ok {
 			if sqliteErr.Code == sqlite3.ErrConstraint {
-				return nil, flipt.ErrInvalidf("flag %q is not unique", r.Key)
+				return nil, ErrInvalidf("flag %q is not unique", r.Key)
 			}
 		}
 		return nil, err
@@ -183,7 +183,7 @@ func (s *FlagService) UpdateFlag(ctx context.Context, r *flipt.UpdateFlagRequest
 	}
 
 	if count != 1 {
-		return nil, flipt.ErrNotFoundf("flag %q", r.Key)
+		return nil, ErrNotFoundf("flag %q", r.Key)
 	}
 
 	flag, err := s.flag(ctx, r.Key)
@@ -224,7 +224,7 @@ func (s *FlagService) CreateVariant(ctx context.Context, r *flipt.CreateVariantR
 	if _, err := query.ExecContext(ctx); err != nil {
 		if sqliteErr, ok := err.(sqlite3.Error); ok {
 			if sqliteErr.ExtendedCode == sqlite3.ErrConstraintForeignKey {
-				return nil, flipt.ErrNotFoundf("flag %q", r.FlagKey)
+				return nil, ErrNotFoundf("flag %q", r.FlagKey)
 			}
 		}
 		return nil, err
@@ -255,7 +255,7 @@ func (s *FlagService) UpdateVariant(ctx context.Context, r *flipt.UpdateVariantR
 	}
 
 	if count != 1 {
-		return nil, flipt.ErrNotFoundf("variant %q", r.Key)
+		return nil, ErrNotFoundf("variant %q", r.Key)
 	}
 
 	var (

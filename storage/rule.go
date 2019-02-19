@@ -14,7 +14,7 @@ import (
 	sq "github.com/Masterminds/squirrel"
 	"github.com/golang/protobuf/ptypes"
 	proto "github.com/golang/protobuf/ptypes"
-	"github.com/markphelps/flipt"
+	flipt "github.com/markphelps/flipt/proto"
 	sqlite3 "github.com/mattn/go-sqlite3"
 	uuid "github.com/satori/go.uuid"
 	"github.com/sirupsen/logrus"
@@ -154,7 +154,7 @@ func (s *RuleService) CreateRule(ctx context.Context, r *flipt.CreateRuleRequest
 		ExecContext(ctx); err != nil {
 		if sqliteErr, ok := err.(sqlite3.Error); ok {
 			if sqliteErr.ExtendedCode == sqlite3.ErrConstraintForeignKey {
-				return nil, flipt.ErrNotFoundf("flag %q or segment %q", r.FlagKey, r.SegmentKey)
+				return nil, ErrNotFoundf("flag %q or segment %q", r.FlagKey, r.SegmentKey)
 			}
 		}
 		return nil, err
@@ -184,7 +184,7 @@ func (s *RuleService) UpdateRule(ctx context.Context, r *flipt.UpdateRuleRequest
 	}
 
 	if count != 1 {
-		return nil, flipt.ErrNotFoundf("rule %q", r.Id)
+		return nil, ErrNotFoundf("rule %q", r.Id)
 	}
 
 	rule, err := s.rule(ctx, r.Id, r.FlagKey)
@@ -306,7 +306,7 @@ func (s *RuleService) CreateDistribution(ctx context.Context, r *flipt.CreateDis
 
 		if sqliteErr, ok := err.(sqlite3.Error); ok {
 			if sqliteErr.ExtendedCode == sqlite3.ErrConstraintForeignKey {
-				return nil, flipt.ErrNotFoundf("rule %q", r.RuleId)
+				return nil, ErrNotFoundf("rule %q", r.RuleId)
 			}
 		}
 		return nil, err
@@ -337,7 +337,7 @@ func (s *RuleService) UpdateDistribution(ctx context.Context, r *flipt.UpdateDis
 	}
 
 	if count != 1 {
-		return nil, flipt.ErrNotFoundf("distribution %q", r.Id)
+		return nil, ErrNotFoundf("distribution %q", r.Id)
 	}
 
 	var (
@@ -460,13 +460,13 @@ func (s *RuleService) Evaluate(ctx context.Context, r *flipt.EvaluationRequest) 
 
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return resp, flipt.ErrNotFoundf("flag %q", r.FlagKey)
+			return resp, ErrNotFoundf("flag %q", r.FlagKey)
 		}
 		return resp, err
 	}
 
 	if !enabled {
-		return resp, flipt.ErrInvalidf("flag %q is disabled", r.FlagKey)
+		return resp, ErrInvalidf("flag %q is disabled", r.FlagKey)
 	}
 
 	// get all rules for flag with their constraints
@@ -549,7 +549,7 @@ func (s *RuleService) Evaluate(ctx context.Context, r *flipt.EvaluationRequest) 
 			case flipt.ComparisonType_BOOLEAN_COMPARISON_TYPE:
 				match, err = matchesBool(c, v)
 			default:
-				return resp, flipt.ErrInvalid("unknown constraint type")
+				return resp, ErrInvalid("unknown constraint type")
 			}
 
 			if err != nil {
