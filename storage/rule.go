@@ -20,29 +20,29 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type RuleService struct {
+type RuleStorage struct {
 	logger  logrus.FieldLogger
 	db      sq.DBProxyBeginner
 	builder sq.StatementBuilderType
 }
 
-// NewRuleService creates a RuleService
-func NewRuleService(logger logrus.FieldLogger, db *sql.DB) *RuleService {
-	return &RuleService{
-		logger:  logger.WithField("service", "rule"),
+// NewRuleStorage creates a RuleStorage
+func NewRuleStorage(logger logrus.FieldLogger, db *sql.DB) *RuleStorage {
+	return &RuleStorage{
+		logger:  logger.WithField("storage", "rule"),
 		db:      sq.NewStmtCacheProxy(db),
 		builder: sq.StatementBuilder.RunWith(sq.NewStmtCacher(db)),
 	}
 }
 
-func (s *RuleService) Rule(ctx context.Context, r *flipt.GetRuleRequest) (*flipt.Rule, error) {
+func (s *RuleStorage) Rule(ctx context.Context, r *flipt.GetRuleRequest) (*flipt.Rule, error) {
 	s.logger.WithField("request", r).Debug("get rule")
 	rule, err := s.rule(ctx, r.Id, r.FlagKey)
 	s.logger.WithField("response", rule).Debug("get rule")
 	return rule, err
 }
 
-func (s *RuleService) rule(ctx context.Context, id, flagKey string) (*flipt.Rule, error) {
+func (s *RuleStorage) rule(ctx context.Context, id, flagKey string) (*flipt.Rule, error) {
 	var (
 		createdAt timestamp
 		updatedAt timestamp
@@ -68,14 +68,14 @@ func (s *RuleService) rule(ctx context.Context, id, flagKey string) (*flipt.Rule
 	return rule, nil
 }
 
-func (s *RuleService) Rules(ctx context.Context, r *flipt.ListRuleRequest) ([]*flipt.Rule, error) {
+func (s *RuleStorage) Rules(ctx context.Context, r *flipt.ListRuleRequest) ([]*flipt.Rule, error) {
 	s.logger.WithField("request", r).Debug("list rules")
 	rules, err := s.rules(ctx, r)
 	s.logger.WithField("response", rules).Debug("list rules")
 	return rules, err
 }
 
-func (s *RuleService) rules(ctx context.Context, r *flipt.ListRuleRequest) ([]*flipt.Rule, error) {
+func (s *RuleStorage) rules(ctx context.Context, r *flipt.ListRuleRequest) ([]*flipt.Rule, error) {
 	var (
 		rules []*flipt.Rule
 
@@ -133,7 +133,7 @@ func (s *RuleService) rules(ctx context.Context, r *flipt.ListRuleRequest) ([]*f
 	return rules, rows.Err()
 }
 
-func (s *RuleService) CreateRule(ctx context.Context, r *flipt.CreateRuleRequest) (*flipt.Rule, error) {
+func (s *RuleStorage) CreateRule(ctx context.Context, r *flipt.CreateRuleRequest) (*flipt.Rule, error) {
 	s.logger.WithField("request", r).Debug("create rule")
 
 	var (
@@ -164,7 +164,7 @@ func (s *RuleService) CreateRule(ctx context.Context, r *flipt.CreateRuleRequest
 	return rule, nil
 }
 
-func (s *RuleService) UpdateRule(ctx context.Context, r *flipt.UpdateRuleRequest) (*flipt.Rule, error) {
+func (s *RuleStorage) UpdateRule(ctx context.Context, r *flipt.UpdateRuleRequest) (*flipt.Rule, error) {
 	s.logger.WithField("request", r).Debug("update rule")
 	var (
 		query = s.builder.Update("rules").
@@ -192,7 +192,7 @@ func (s *RuleService) UpdateRule(ctx context.Context, r *flipt.UpdateRuleRequest
 	return rule, err
 }
 
-func (s *RuleService) DeleteRule(ctx context.Context, r *flipt.DeleteRuleRequest) error {
+func (s *RuleStorage) DeleteRule(ctx context.Context, r *flipt.DeleteRuleRequest) error {
 	s.logger.WithField("request", r).Debug("delete rule")
 
 	tx, err := s.db.Begin()
@@ -250,7 +250,7 @@ func (s *RuleService) DeleteRule(ctx context.Context, r *flipt.DeleteRuleRequest
 	return tx.Commit()
 }
 
-func (s *RuleService) OrderRules(ctx context.Context, r *flipt.OrderRulesRequest) error {
+func (s *RuleStorage) OrderRules(ctx context.Context, r *flipt.OrderRulesRequest) error {
 	s.logger.WithField("request", r).Debug("order rules")
 
 	tx, err := s.db.Begin()
@@ -266,7 +266,7 @@ func (s *RuleService) OrderRules(ctx context.Context, r *flipt.OrderRulesRequest
 	return tx.Commit()
 }
 
-func (s *RuleService) orderRules(ctx context.Context, tx *sql.Tx, flagKey string, ruleIDs []string) error {
+func (s *RuleStorage) orderRules(ctx context.Context, tx *sql.Tx, flagKey string, ruleIDs []string) error {
 	updatedAt := proto.TimestampNow()
 
 	for i, id := range ruleIDs {
@@ -284,7 +284,7 @@ func (s *RuleService) orderRules(ctx context.Context, tx *sql.Tx, flagKey string
 	return nil
 }
 
-func (s *RuleService) CreateDistribution(ctx context.Context, r *flipt.CreateDistributionRequest) (*flipt.Distribution, error) {
+func (s *RuleStorage) CreateDistribution(ctx context.Context, r *flipt.CreateDistributionRequest) (*flipt.Distribution, error) {
 	s.logger.WithField("request", r).Debug("create distribution")
 
 	var (
@@ -316,7 +316,7 @@ func (s *RuleService) CreateDistribution(ctx context.Context, r *flipt.CreateDis
 	return d, nil
 }
 
-func (s *RuleService) UpdateDistribution(ctx context.Context, r *flipt.UpdateDistributionRequest) (*flipt.Distribution, error) {
+func (s *RuleStorage) UpdateDistribution(ctx context.Context, r *flipt.UpdateDistributionRequest) (*flipt.Distribution, error) {
 	s.logger.WithField("request", r).Debug("update distribution")
 
 	var (
@@ -362,7 +362,7 @@ func (s *RuleService) UpdateDistribution(ctx context.Context, r *flipt.UpdateDis
 	return distribution, nil
 }
 
-func (s *RuleService) DeleteDistribution(ctx context.Context, r *flipt.DeleteDistributionRequest) error {
+func (s *RuleStorage) DeleteDistribution(ctx context.Context, r *flipt.DeleteDistributionRequest) error {
 	s.logger.WithField("request", r).Debug("delete distribution")
 
 	_, err := s.builder.Delete("distributions").
@@ -372,7 +372,7 @@ func (s *RuleService) DeleteDistribution(ctx context.Context, r *flipt.DeleteDis
 	return err
 }
 
-func (s *RuleService) distributions(ctx context.Context, rule *flipt.Rule) (err error) {
+func (s *RuleStorage) distributions(ctx context.Context, rule *flipt.Rule) (err error) {
 	query := s.builder.Select("id", "rule_id", "variant_id", "rollout", "created_at", "updated_at").
 		From("distributions").
 		Where(sq.Eq{"rule_id": rule.Id}).
@@ -436,7 +436,7 @@ type distribution struct {
 	VariantKey string
 }
 
-func (s *RuleService) Evaluate(ctx context.Context, r *flipt.EvaluationRequest) (*flipt.EvaluationResponse, error) {
+func (s *RuleStorage) Evaluate(ctx context.Context, r *flipt.EvaluationRequest) (*flipt.EvaluationResponse, error) {
 	s.logger.WithField("request", r).Debug("evaluate")
 
 	var (

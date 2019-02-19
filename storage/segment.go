@@ -14,27 +14,27 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type SegmentService struct {
+type SegmentStorage struct {
 	logger  logrus.FieldLogger
 	builder sq.StatementBuilderType
 }
 
-// NewSegmentService creates a SegmentService
-func NewSegmentService(logger logrus.FieldLogger, db *sql.DB) *SegmentService {
-	return &SegmentService{
-		logger:  logger.WithField("service", "segment"),
+// NewSegmentStorage creates a SegmentStorage
+func NewSegmentStorage(logger logrus.FieldLogger, db *sql.DB) *SegmentStorage {
+	return &SegmentStorage{
+		logger:  logger.WithField("storage", "segment"),
 		builder: sq.StatementBuilder.RunWith(sq.NewStmtCacher(db)),
 	}
 }
 
-func (s *SegmentService) Segment(ctx context.Context, r *flipt.GetSegmentRequest) (*flipt.Segment, error) {
+func (s *SegmentStorage) Segment(ctx context.Context, r *flipt.GetSegmentRequest) (*flipt.Segment, error) {
 	s.logger.WithField("request", r).Debug("get segment")
 	segment, err := s.segment(ctx, r.Key)
 	s.logger.WithField("response", segment).Debug("get segment")
 	return segment, err
 }
 
-func (s SegmentService) segment(ctx context.Context, key string) (*flipt.Segment, error) {
+func (s SegmentStorage) segment(ctx context.Context, key string) (*flipt.Segment, error) {
 	var (
 		createdAt timestamp
 		updatedAt timestamp
@@ -69,7 +69,7 @@ func (s SegmentService) segment(ctx context.Context, key string) (*flipt.Segment
 	return segment, nil
 }
 
-func (s *SegmentService) Segments(ctx context.Context, r *flipt.ListSegmentRequest) ([]*flipt.Segment, error) {
+func (s *SegmentStorage) Segments(ctx context.Context, r *flipt.ListSegmentRequest) ([]*flipt.Segment, error) {
 	s.logger.WithField("request", r).Debug("list segments")
 
 	var (
@@ -128,7 +128,7 @@ func (s *SegmentService) Segments(ctx context.Context, r *flipt.ListSegmentReque
 	return segments, rows.Err()
 }
 
-func (s *SegmentService) CreateSegment(ctx context.Context, r *flipt.CreateSegmentRequest) (*flipt.Segment, error) {
+func (s *SegmentStorage) CreateSegment(ctx context.Context, r *flipt.CreateSegmentRequest) (*flipt.Segment, error) {
 	s.logger.WithField("request", r).Debug("create segment")
 
 	var (
@@ -159,7 +159,7 @@ func (s *SegmentService) CreateSegment(ctx context.Context, r *flipt.CreateSegme
 	return segment, nil
 }
 
-func (s *SegmentService) UpdateSegment(ctx context.Context, r *flipt.UpdateSegmentRequest) (*flipt.Segment, error) {
+func (s *SegmentStorage) UpdateSegment(ctx context.Context, r *flipt.UpdateSegmentRequest) (*flipt.Segment, error) {
 	s.logger.WithField("request", r).Debug("update segment")
 
 	query := s.builder.Update("segments").
@@ -187,7 +187,7 @@ func (s *SegmentService) UpdateSegment(ctx context.Context, r *flipt.UpdateSegme
 	return segment, err
 }
 
-func (s *SegmentService) DeleteSegment(ctx context.Context, r *flipt.DeleteSegmentRequest) error {
+func (s *SegmentStorage) DeleteSegment(ctx context.Context, r *flipt.DeleteSegmentRequest) error {
 	s.logger.WithField("request", r).Debug("delete segment")
 
 	_, err := s.builder.Delete("segments").
@@ -197,7 +197,7 @@ func (s *SegmentService) DeleteSegment(ctx context.Context, r *flipt.DeleteSegme
 	return err
 }
 
-func (s *SegmentService) CreateConstraint(ctx context.Context, r *flipt.CreateConstraintRequest) (*flipt.Constraint, error) {
+func (s *SegmentStorage) CreateConstraint(ctx context.Context, r *flipt.CreateConstraintRequest) (*flipt.Constraint, error) {
 	s.logger.WithField("request", r).Debug("create constraint")
 
 	var (
@@ -255,7 +255,7 @@ func (s *SegmentService) CreateConstraint(ctx context.Context, r *flipt.CreateCo
 	return c, nil
 }
 
-func (s *SegmentService) UpdateConstraint(ctx context.Context, r *flipt.UpdateConstraintRequest) (*flipt.Constraint, error) {
+func (s *SegmentStorage) UpdateConstraint(ctx context.Context, r *flipt.UpdateConstraintRequest) (*flipt.Constraint, error) {
 	s.logger.WithField("request", r).Debug("update constraint")
 
 	operator := strings.ToLower(r.Operator)
@@ -326,7 +326,7 @@ func (s *SegmentService) UpdateConstraint(ctx context.Context, r *flipt.UpdateCo
 	return c, nil
 }
 
-func (s *SegmentService) DeleteConstraint(ctx context.Context, r *flipt.DeleteConstraintRequest) error {
+func (s *SegmentStorage) DeleteConstraint(ctx context.Context, r *flipt.DeleteConstraintRequest) error {
 	s.logger.WithField("request", r).Debug("delete constraint")
 
 	_, err := s.builder.Delete("constraints").
@@ -336,7 +336,7 @@ func (s *SegmentService) DeleteConstraint(ctx context.Context, r *flipt.DeleteCo
 	return err
 }
 
-func (s *SegmentService) constraints(ctx context.Context, segment *flipt.Segment) error {
+func (s *SegmentStorage) constraints(ctx context.Context, segment *flipt.Segment) error {
 	query := s.builder.Select("id, segment_key, type, property, operator, value, created_at, updated_at").
 		From("constraints").
 		Where(sq.Eq{"segment_key": segment.Key}).

@@ -25,9 +25,9 @@ type Server struct {
 func New(logger logrus.FieldLogger, db *sql.DB) (*Server, error) {
 	return &Server{
 		logger:            logger,
-		FlagRepository:    storage.NewFlagService(logger, db),
-		SegmentRepository: storage.NewSegmentService(logger, db),
-		RuleRepository:    storage.NewRuleService(logger, db),
+		FlagRepository:    storage.NewFlagStorage(logger, db),
+		SegmentRepository: storage.NewSegmentStorage(logger, db),
+		RuleRepository:    storage.NewRuleStorage(logger, db),
 	}, nil
 }
 

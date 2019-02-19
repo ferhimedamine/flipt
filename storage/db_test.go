@@ -47,9 +47,9 @@ func TestMain(m *testing.M) {
 		logger.Fatal(err)
 	}
 
-	flagRepo = NewFlagService(logger, db)
+	flagRepo = NewFlagStorage(logger, db)
 	segmentRepo = NewSegmentService(logger, db)
-	ruleRepo = NewRuleService(logger, db)
+	ruleRepo = NewRuleStorage(logger, db)
 
 	err = truncate()
 	if err != nil {
