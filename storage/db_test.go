@@ -48,7 +48,7 @@ func TestMain(m *testing.M) {
 	}
 
 	flagRepo = NewFlagStorage(logger, db)
-	segmentRepo = NewSegmentService(logger, db)
+	segmentRepo = NewSegmentStorage(logger, db)
 	ruleRepo = NewRuleStorage(logger, db)
 
 	err = truncate()
